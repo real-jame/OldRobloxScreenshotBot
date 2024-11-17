@@ -1,0 +1,16 @@
+{
+  "name": "oldrobloxscreenshotbot",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@atproto/api": "^0.13.16",
+    "dotenv": "^16.4.5",
+    "masto": "^6.10.1"
+  }
+}

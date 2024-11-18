@@ -11,9 +11,11 @@
   "dependencies": {
     "@atproto/api": "^0.13.16",
     "axios": "^1.7.7",
+    "cheerio": "^1.0.0",
     "dotenv": "^16.4.5",
     "masto": "^6.10.1",
     "sharp": "^0.33.5",
-    "soap": "^1.1.6"
+    "soap": "^1.1.6",
+    "wsdl-tsclient": "^1.7.1"
   }
 }

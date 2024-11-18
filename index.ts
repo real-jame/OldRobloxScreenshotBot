@@ -4,9 +4,10 @@ import fs from "fs";
 import { screenshot } from "./screenshot";
 import { createRestAPIClient } from "masto";
 import AtpAgent from "@atproto/api";
+import axios from "axios";
 
 const mastodonInstanceUrl = process.env.MASTODON_INSTANCE_URL;
-const mastodonAccessKey = process.env.MASTODON_ACCESS_KEY;
+const mastodonAccessToken = process.env.MASTODON_ACCESS_TOKEN;
 const blueskyPdsUrl = process.env.BLUESKY_PDS_URL;
 const blueskyIdentifier = process.env.BLUESKY_IDENTIFIER;
 const blueskyPassword = process.env.BLUESKY_PASSWORD;
@@ -39,27 +40,40 @@ const skyDescription = "An automatically generated thumbnail of a Roblox map in 
 const noSkyDescription = "An automatically generated thumbnail of a Roblox map in the 2008 client. It is likely a birds-eye view of the map, trying to fit it all in the image, and has a transparent background.";
 const postText = `Check out this classic Roblox map I found called ${randomMap}!`;
 
-if (mastodonInstanceUrl && mastodonAccessKey) {
+if (mastodonInstanceUrl && mastodonAccessToken) {
     console.log("Posting to Mastodon...");
     const masto = createRestAPIClient({
         url: mastodonInstanceUrl,
-        accessToken: mastodonAccessKey
+        accessToken: mastodonAccessToken
     });
+    console.log(masto.v2);
 
-    const skyAttachment = await masto.v2.media.create({
-        file: screenshotSky,
-        description: skyDescription
-    });
-    const noSkyAttachment = await masto.v2.media.create({
-        file: screenshotNoSky,
-        description: noSkyDescription
-    });
-    console.log(skyAttachment, noSkyAttachment);
+    // const skyAttachment = await masto.v2.media.create({
+    //     file: "hi",
+    //     description: skyDescription
+    // });
+    // const noSkyAttachment = await masto.v2.media.create({
+    //     file: screenshotNoSky,
+    //     description: noSkyDescription
+    // });
+    const axiosOptions = { headers: { Authorization: `Bearer ${mastodonAccessToken}`, "Content-Type": "multipart/form-data" } };
+    const formDataSky = new FormData();
+    formDataSky.append('file', screenshotSky, { filename: 'screenshotSky.webp' });
+    formDataSky.append('description', skyDescription);
+
+    const formDataNoSky = new FormData();
+    formDataNoSky.append('file', screenshotNoSky, { filename: 'screenshotNoSky.webp' });
+    formDataNoSky.append('description', noSkyDescription);
+
+    const skyAttachment = await axios.postForm(`${mastodonInstanceUrl}/api/v2/media`, formDataSky, axiosOptions);
+    const noSkyAttachment = await axios.postForm(`${mastodonInstanceUrl}/api/v2/media`, formDataNoSky, axiosOptions);;
+    console.log(skyAttachment.data, noSkyAttachment.data);
+
 
     const status = await masto.v1.statuses.create({
         status: postText,
         visibility: "public",
-        mediaIds: [skyAttachment.id, noSkyAttachment.id],
+        mediaIds: [skyAttachment.data.id, noSkyAttachment.data.id],
     });
     console.log(status);
 }

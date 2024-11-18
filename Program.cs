@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 DotNetEnv.Env.Load();
 var mastodonInstanceUrl = System.Environment.GetEnvironmentVariable("MASTODON_INSTANCE_URL");
-var mastodonAccessKey = System.Environment.GetEnvironmentVariable("MASTODON_ACCESS_KEY");
+var mastodonAccessToken = System.Environment.GetEnvironmentVariable("MASTODON_ACCESS_TOKEN");
 var blueskyPdsUrl = System.Environment.GetEnvironmentVariable("BLUESKY_PDS_URL");
 var blueskyHandle = System.Environment.GetEnvironmentVariable("BLUESKY_HANDLE");
 var blueskyPassword = System.Environment.GetEnvironmentVariable("BLUESKY_PASSWORD");
@@ -42,10 +42,10 @@ var postText = $"Check out this classic Roblox map I found called {randomMap.Nam
 
 var httpClient = new HttpClient();
 httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("OldRobloxScreenshotBot");
-if (!String.IsNullOrEmpty(mastodonInstanceUrl) && !String.IsNullOrEmpty(mastodonAccessKey))
+if (!String.IsNullOrEmpty(mastodonInstanceUrl) && !String.IsNullOrEmpty(mastodonAccessToken))
 {
     Console.WriteLine("Posting to Mastodon...");
-    var client = new MastodonClient(mastodonInstanceUrl, mastodonAccessKey, httpClient);
+    var client = new MastodonClient(mastodonInstanceUrl, mastodonAccessToken, httpClient);
     Console.WriteLine("Got client");
 
     var skyUploadResult = await client.UploadMedia(screenshotSky, description: skyDescription);
@@ -57,19 +57,19 @@ if (!String.IsNullOrEmpty(mastodonInstanceUrl) && !String.IsNullOrEmpty(mastodon
     Console.WriteLine(postResult);
 }
 
-if (!String.IsNullOrEmpty(blueskyPdsUrl) && !String.IsNullOrEmpty(blueskyHandle) && !String.IsNullOrEmpty(blueskyPassword))
-{
-    Console.WriteLine("Posting to Bluesky...");
+// if (!String.IsNullOrEmpty(blueskyPdsUrl) && !String.IsNullOrEmpty(blueskyHandle) && !String.IsNullOrEmpty(blueskyPassword))
+// {
+//     Console.WriteLine("Posting to Bluesky...");
 
-    var blueskyClient = new BlueskyClient(blueskyPdsUrl, blueskyHandle, blueskyPassword);
-    var accessToken = await blueskyClient.GetSessionTokenAsync(httpClient);
-    Console.WriteLine("Got client");
+//     var blueskyClient = new BlueskyClient(blueskyPdsUrl, blueskyHandle, blueskyPassword);
+//     var accessToken = await blueskyClient.GetSessionTokenAsync(httpClient);
+//     Console.WriteLine("Got client");
 
-    var skyBlob = await blueskyClient.UploadImageAsync(httpClient, accessToken, screenshotSky, "image/webp");
-    Console.WriteLine(skyBlob);
-    var noSkyBlob = await blueskyClient.UploadImageAsync(httpClient, accessToken, screenshotNoSky, "image/webp");
-    Console.WriteLine(noSkyBlob);
+//     var skyBlob = await blueskyClient.UploadImageAsync(httpClient, accessToken, screenshotSky, "image/webp");
+//     Console.WriteLine(skyBlob);
+//     var noSkyBlob = await blueskyClient.UploadImageAsync(httpClient, accessToken, screenshotNoSky, "image/webp");
+//     Console.WriteLine(noSkyBlob);
 
-    var postResponse = await blueskyClient.CreatePostAsync(httpClient, accessToken, postText, new List<(string Description, BlueskyClient.BlueskyBlob Blob)> { (skyDescription, skyBlob), (noSkyDescription, noSkyBlob) });
-    Console.WriteLine("Posted to Bluesky: " + postResponse);
-}
+//     var postResponse = await blueskyClient.CreatePostAsync(httpClient, accessToken, postText, new List<(string Description, BlueskyClient.BlueskyBlob Blob)> { (skyDescription, skyBlob), (noSkyDescription, noSkyBlob) });
+//     Console.WriteLine("Posted to Bluesky: " + postResponse);
+// }

@@ -16,17 +16,26 @@ const mapsFolder = path.join(process.cwd(), "maps");
 if (mapsFolder == null) {
     throw new Error("No maps folder found");
 }
-const mapFiles = fs.readdirSync(mapsFolder);
-if (mapFiles.length === 0) {
-    throw new Error("No map files found in the maps folder.");
+function getAllMaps(dirPath: string, arrayOfFiles: string[] = []): string[] {
+    const files = fs.readdirSync(dirPath);
+
+    files.forEach((file) => {
+        const filePath = path.join(dirPath, file);
+        if (fs.statSync(filePath).isDirectory()) {
+            arrayOfFiles = getAllMaps(filePath, arrayOfFiles);
+        } else if (filePath.endsWith('.rbxl')) {
+            arrayOfFiles.push(filePath);
+        }
+    });
+
+    return arrayOfFiles;
 }
-
-
-const randomMap = mapFiles[Math.floor(Math.random() * mapFiles.length)];
+const allMaps = getAllMaps(mapsFolder);
+const randomMap = allMaps[Math.floor(Math.random() * allMaps.length)];
 const randomMapFullName = path.join(mapsFolder, randomMap);
 console.log(`Selected map: ${randomMap}`);
 
-await screenshot.init();
+// await screenshot.init();
 const screenshotSky = await screenshot.getScreenshotAsync(randomMapFullName, false);
 console.log("Screenshot complete (skybox on)");
 const screenshotNoSky = await screenshot.getScreenshotAsync(randomMapFullName, true);
@@ -46,7 +55,6 @@ if (mastodonInstanceUrl && mastodonAccessToken) {
         url: mastodonInstanceUrl,
         accessToken: mastodonAccessToken
     });
-    console.log(masto.v2);
 
     // const skyAttachment = await masto.v2.media.create({
     //     file: "hi",

@@ -32,8 +32,9 @@ function getAllMaps(dirPath: string, arrayOfFiles: string[] = []): string[] {
 }
 const allMaps = getAllMaps(mapsFolder);
 const randomMap = allMaps[Math.floor(Math.random() * allMaps.length)];
-// const randomMapFullName = path.join(mapsFolder, randomMap);
+const metadataFile = path.join(path.dirname(randomMap), "metadata.json");
 console.log(`Selected map: ${randomMap}`);
+console.log(metadataFile ? `Metadata file: ${metadataFile}` : "No metadata file found");
 
 // await screenshot.init();
 const screenshotSky = await screenshot.getScreenshotAsync(randomMap, false);
@@ -47,7 +48,19 @@ if (screenshotSky == null || screenshotNoSky == null) {
 
 const skyDescription = "An automatically generated thumbnail of a Roblox map in the 2008 client. It uses the camera angle set by the game developer for the thumbnail, and includes a skybox.";
 const noSkyDescription = "An automatically generated thumbnail of a Roblox map in the 2008 client. It is likely a birds-eye view of the map, trying to fit it all in the image, and has a transparent background.";
-const postText = `Check out this classic Roblox map I found called ${path.basename(randomMap)}!`;
+
+// Metadata and folder structure is meant for the 2008-08 Robloxopolis map archive.
+let postText = `${path.basename(randomMap)}`;
+if (metadataFile) {
+    const metadata = JSON.parse(fs.readFileSync(metadataFile, "utf8"));
+    postText = `${metadata.Name}
+
+By: ${metadata.Creator}
+Link: https://roblox.com/games/${path.basename(path.resolve(randomMap, "../.."))}
+Description: "${metadata.Description.trimStart().trimEnd()}"`;
+}
+
+console.log(postText);
 
 if (mastodonInstanceUrl && mastodonAccessToken) {
     console.log("Posting to Mastodon...");
@@ -57,7 +70,7 @@ if (mastodonInstanceUrl && mastodonAccessToken) {
     });
 
     // const skyAttachment = await masto.v2.media.create({
-    //     file: "hi",
+    //     file: screenshotSky,
     //     description: skyDescription
     // });
     // const noSkyAttachment = await masto.v2.media.create({
@@ -66,11 +79,11 @@ if (mastodonInstanceUrl && mastodonAccessToken) {
     // });
     const axiosOptions = { headers: { Authorization: `Bearer ${mastodonAccessToken}`, "Content-Type": "multipart/form-data" } };
     const formDataSky = new FormData();
-    formDataSky.append('file', screenshotSky, { filename: 'screenshotSky.webp' });
+    formDataSky.append('file', screenshotSky, 'screenshotSky.webp');
     formDataSky.append('description', skyDescription);
 
     const formDataNoSky = new FormData();
-    formDataNoSky.append('file', screenshotNoSky, { filename: 'screenshotNoSky.webp' });
+    formDataNoSky.append('file', screenshotNoSky, 'screenshotNoSky.webp');
     formDataNoSky.append('description', noSkyDescription);
 
     const skyAttachment = await axios.postForm(`${mastodonInstanceUrl}/api/v2/media`, formDataSky, axiosOptions);
@@ -96,8 +109,15 @@ if (blueskyPdsUrl && blueskyIdentifier && blueskyPassword) {
     const noSkyAttachment = await agent.uploadBlob(screenshotNoSky);
     console.log(skyAttachment.data, noSkyAttachment.data);
 
+
+    let truncatedPostText = postText;
+    if (postText.length > 300) {
+        truncatedPostText = postText.substring(0, 297) + '...';
+    }
+    console.log(truncatedPostText);
+
     const status = await agent.post({
-        text: postText,
+        text: truncatedPostText,
         embed: {
             $type: "app.bsky.embed.images",
             images: [

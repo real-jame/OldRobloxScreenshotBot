@@ -23,17 +23,17 @@ export class screenshot {
             let scriptContent = fs.readFileSync("screenshot.lua").toString();
             scriptContent = scriptContent.toString().replace("INSERT_MAP_HERE", mapPath.replace(/\\/g, '/')).replace("HIDE_SKY_BOOLEAN", hideSky ? "true" : "false");
 
-            // const job = {
-            //     id: crypto.randomUUID(),
-            //     expirationInSeconds: 30,
-            //     category: "1",
-            //     cores: "1"
-            // };
+            const job = {
+                id: crypto.randomUUID(),
+                expirationInSeconds: 30,
+                category: "1",
+                cores: "1"
+            };
 
-            // const script = {
-            //     name: "screenshot",
-            //     script: scriptContent
-            // };
+            const script = {
+                name: "screenshot",
+                script: scriptContent
+            };
 
             // A hacky alternate way, because the soap library is not making a client with the RCCService WSDL!
             const postHeaders = {

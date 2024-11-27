@@ -32,13 +32,13 @@ function getAllMaps(dirPath: string, arrayOfFiles: string[] = []): string[] {
 }
 const allMaps = getAllMaps(mapsFolder);
 const randomMap = allMaps[Math.floor(Math.random() * allMaps.length)];
-const randomMapFullName = path.join(mapsFolder, randomMap);
+// const randomMapFullName = path.join(mapsFolder, randomMap);
 console.log(`Selected map: ${randomMap}`);
 
 // await screenshot.init();
-const screenshotSky = await screenshot.getScreenshotAsync(randomMapFullName, false);
+const screenshotSky = await screenshot.getScreenshotAsync(randomMap, false);
 console.log("Screenshot complete (skybox on)");
-const screenshotNoSky = await screenshot.getScreenshotAsync(randomMapFullName, true);
+const screenshotNoSky = await screenshot.getScreenshotAsync(randomMap, true);
 console.log("Screenshot complete (skybox off)");
 
 if (screenshotSky == null || screenshotNoSky == null) {
@@ -47,7 +47,7 @@ if (screenshotSky == null || screenshotNoSky == null) {
 
 const skyDescription = "An automatically generated thumbnail of a Roblox map in the 2008 client. It uses the camera angle set by the game developer for the thumbnail, and includes a skybox.";
 const noSkyDescription = "An automatically generated thumbnail of a Roblox map in the 2008 client. It is likely a birds-eye view of the map, trying to fit it all in the image, and has a transparent background.";
-const postText = `Check out this classic Roblox map I found called ${randomMap}!`;
+const postText = `Check out this classic Roblox map I found called ${path.basename(randomMap)}!`;
 
 if (mastodonInstanceUrl && mastodonAccessToken) {
     console.log("Posting to Mastodon...");

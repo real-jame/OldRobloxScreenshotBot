@@ -3,8 +3,9 @@ import path from "path";
 import fs from "fs";
 import { screenshot } from "./screenshot";
 import { createRestAPIClient } from "masto";
-import AtpAgent from "@atproto/api";
+import AtpAgent, { Facet } from "@atproto/api";
 import axios from "axios";
+import RichtextBuilder from "@atcute/bluesky-richtext-builder";
 
 const mastodonInstanceUrl = process.env.MASTODON_INSTANCE_URL;
 const mastodonAccessToken = process.env.MASTODON_ACCESS_TOKEN;
@@ -49,17 +50,8 @@ if (screenshotSky == null || screenshotNoSky == null) {
 const skyDescription = "An automatically generated thumbnail of a Roblox map in the 2008 client. It uses the camera angle set by the game developer for the thumbnail, and includes a skybox.";
 const noSkyDescription = "An automatically generated thumbnail of a Roblox map in the 2008 client. It is likely a birds-eye view of the map, trying to fit it all in the image, and has a transparent background.";
 
-// Metadata and folder structure is meant for the 2008-08 Robloxopolis map archive.
+// Metadata and folder structure is meant for the 2006-08 Robloxopolis map archive.
 let postText = `${path.basename(randomMap)}`;
-if (metadataFile) {
-    const metadata = JSON.parse(fs.readFileSync(metadataFile, "utf8"));
-    postText = `${metadata.Name ? metadata.Name : path.basename(randomMap)}${metadata.Name}
-
-${metadata.Creator ? `By: ${metadata.Creator}` : ""}
-Link: https://roblox.com/games/${path.basename(path.resolve(randomMap, "../.."))}
-${metadata.Description ? `Description: "${metadata.Description.trimStart().trimEnd()}"` : ""}`;
-}
-
 console.log(postText);
 
 if (mastodonInstanceUrl && mastodonAccessToken) {
@@ -90,6 +82,14 @@ if (mastodonInstanceUrl && mastodonAccessToken) {
     const noSkyAttachment = await axios.postForm(`${mastodonInstanceUrl}/api/v2/media`, formDataNoSky, axiosOptions);;
     console.log(skyAttachment.data, noSkyAttachment.data);
 
+    if (metadataFile) {
+        const metadata = JSON.parse(fs.readFileSync(metadataFile, "utf8"));
+        postText = `${metadata.Name ? metadata.Name : path.basename(randomMap)}${metadata.Name}
+
+${metadata.Creator ? `By: ${metadata.Creator}` : ""}
+Link: https://roblox.com/games/${path.basename(path.resolve(randomMap, "../.."))}
+${metadata.Description ? `Description: "${metadata.Description.trimStart().trimEnd()}"` : ""}`;
+    }
 
     const status = await masto.v1.statuses.create({
         status: postText,
@@ -109,15 +109,24 @@ if (blueskyPdsUrl && blueskyIdentifier && blueskyPassword) {
     const noSkyAttachment = await agent.uploadBlob(screenshotNoSky);
     console.log(skyAttachment.data, noSkyAttachment.data);
 
-
-    let truncatedPostText = postText;
-    if (postText.length > 300) {
-        truncatedPostText = postText.substring(0, 297) + '...';
+    let textBuilder = new RichtextBuilder().addText(postText);
+    if (metadataFile) {
+        const metadata = JSON.parse(fs.readFileSync(metadataFile, "utf8"));
+        const gameLink = `https://roblox.com/games/${path.basename(path.resolve(randomMap, "../.."))}`;
+        textBuilder = new RichtextBuilder()
+            .addText(metadata.Name ? metadata.Name : path.basename(randomMap)).addText("\n\n")
+            .addText(metadata.Creator ? `By: ${metadata.Creator}` : "").addText("\n")
+            .addText("Link: ").addLink(gameLink, gameLink).addText("\n")
+            .addText(metadata.Description ? `Description: "${metadata.Description.trimStart().trimEnd()}"` : "");
     }
-    console.log(truncatedPostText);
+    let blueskyText = Object.assign({ text: "", facets: "" }, textBuilder.build());
+    if (blueskyText.text.length > 300) {
+        blueskyText.text = blueskyText.text.substring(0, 296) + '...';
+    }
+    console.log(blueskyText.text, blueskyText.facets);
 
     const status = await agent.post({
-        text: truncatedPostText,
+        text: blueskyText.text,
         embed: {
             $type: "app.bsky.embed.images",
             images: [
@@ -131,6 +140,7 @@ if (blueskyPdsUrl && blueskyIdentifier && blueskyPassword) {
                 }
             ]
         },
+        facets: blueskyText.facets as any,
         createdAt: new Date().toISOString()
     });
     console.log(status);

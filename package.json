@@ -9,6 +9,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@atcute/bluesky-richtext-builder": "^1.0.2",
     "@atproto/api": "^0.13.16",
     "axios": "^1.7.7",
     "cheerio": "^1.0.0",

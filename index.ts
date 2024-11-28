@@ -53,11 +53,11 @@ const noSkyDescription = "An automatically generated thumbnail of a Roblox map i
 let postText = `${path.basename(randomMap)}`;
 if (metadataFile) {
     const metadata = JSON.parse(fs.readFileSync(metadataFile, "utf8"));
-    postText = `${metadata.Name}
+    postText = `${metadata.Name ? metadata.Name : path.basename(randomMap)}${metadata.Name}
 
-By: ${metadata.Creator}
+${metadata.Creator ? `By: ${metadata.Creator}` : ""}
 Link: https://roblox.com/games/${path.basename(path.resolve(randomMap, "../.."))}
-Description: "${metadata.Description.trimStart().trimEnd()}"`;
+${metadata.Description ? `Description: "${metadata.Description.trimStart().trimEnd()}"` : ""}`;
 }
 
 console.log(postText);

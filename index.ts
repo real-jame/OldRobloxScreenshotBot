@@ -84,7 +84,7 @@ if (mastodonInstanceUrl && mastodonAccessToken) {
 
     if (metadataFile) {
         const metadata = JSON.parse(fs.readFileSync(metadataFile, "utf8"));
-        postText = `${metadata.Name ? metadata.Name : path.basename(randomMap)}${metadata.Name}
+        postText = `${metadata.Name ? metadata.Name : path.basename(randomMap)}
 
 ${metadata.Creator ? `By: ${metadata.Creator}` : ""}
 Link: https://roblox.com/games/${path.basename(path.resolve(randomMap, "../.."))}
